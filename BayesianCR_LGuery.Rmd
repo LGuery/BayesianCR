@@ -1,0 +1,358 @@
+---
+title: "Capture-Recapture with Bayesian statistics"
+author: "Loreleï Guéry"
+date: "July 2020"
+output:
+  beamer_presentation:
+    fig_caption: no
+    includes:
+      in_header: header.tex
+    latex_engine: pdflatex
+    slide_level: 2
+    theme: metropolis
+  ioslides_presentation: default
+  slidy_presentation: default
+classoption: aspectratio=169
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(cache = TRUE, 
+                      echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      fig.height=6, 
+                      fig.width = 1.777777*6,
+                      tidy = FALSE, 
+                      comment = NA, 
+                      highlight = TRUE, 
+                      prompt = FALSE, 
+                      crop = TRUE,
+                      comment = "#>",
+                      collapse = TRUE)
+knitr::opts_knit$set(width = 60)
+library(tidyverse)
+library(reshape2)
+theme_set(theme_light(base_size = 16))
+make_latex_decorator <- function(output, otherwise) {
+  function() {
+      if (knitr:::is_latex_output()) output else otherwise
+  }
+}
+insert_pause <- make_latex_decorator(". . .", "\n")
+insert_slide_break <- make_latex_decorator("----", "\n")
+insert_inc_bullet <- make_latex_decorator("> *", "*")
+insert_html_math <- make_latex_decorator("", "$$")
+```
+
+## Slides, codes and data
+
+* All material prepared with `R`.
+* `R Markdown` used to write reproducible material.
+* Material available via Github [\alert{here}](https://github.com/LGuery/Bayesian_Workshop_AOTTP).
+
+## Credits
+
+* Workshops material shared by Andy Royle and the Biometrics Working Group [\alert{there}](https://sites.google.com/site/spatialcapturerecapture/workshop-athens-2016) or [\alert{there}](https://sites.google.com/site/spatialcapturerecapture/workshop-tws17)
+
+* Materials shared by [\alert{Olivier Gimenez}](https://github.com/oliviergimenez/Bayesian_Workshop), [\alert{Murray Efford}](https://www.otago.ac.nz/density/pdfs/secr-tutorial.pdf) and \alert{Andy Royle} [\alert{here}](https://www.stat.colostate.edu/graybillconference2014/Presentations/Royle.pdf) and [\alert{there}](https://slideplayer.com/slide/10008078/)
+
+## JAGS `R` Packages
+
+Many different packages can be used to run JAGS from R such as:
+
+* [\alert{rjags}](https://cran.r-project.org/web/packages/rjags/index.html)
+
+* [\alert{jagsUI}](https://cran.r-project.org/web/packages/jagsUI/index.html)
+
+* [\alert{R2jags}](https://cran.r-project.org/web/packages/R2jags/index.html)
+
+## SECR `R` Packages
+
+Different packages can be used to run SECR models from R such as:
+
+`r insert_inc_bullet()` [\alert{scrbook}](https://sites.google.com/site/spatialcapturerecapture/) from the [\alert{Spatial Capture-Recapture} book](https://books.google.fr/books?hl=fr&lr=&id=RO08-S-amZMC&oi=fnd&pg=PR1&dq=spatial+capture+recapture+book&ots=e8zwMmCF3G&sig=oi804aeL6cfrvwaAueo1NpNLNp0#v=onepage&q=spatial%20capture%20recapture%20book&f=false) by Andy Royle, Richard Chandler, Rahel Sollmann and Beth Gardner
+
+`r insert_inc_bullet()`  [\alert{secr}](https://cran.r-project.org/web/packages/secr/index.html) developped by Murray Efford
+
+`r insert_inc_bullet()`  [\alert{oSCR}](https://sites.google.com/site/spatialcapturerecapture/oscr-package) developed by Chris Sutherland, Andy Royle, and Dan Linden
+
+## The Bibles
+
+```{r,  out.width = '35%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/BPop_Winbugs.jpg')
+```
+
+## The Bibles
+
+```{r,  out.width = '90%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/SCR_book.png')
+```
+
+## Outline
+
+1. Bayesian Capture-Recapture models in closed population
+  * Exercise 1: Fit Model M0 to the bear data using JAGS and data augmentation
+
+2. Spatially Explicit Capture Recapture (SECR) models
+
+# Bayesian Capture-Recapture models in closed population
+
+## Capture-recapture, quésako?
+
+`r insert_inc_bullet()` Information on N or density D is the main interest.
+`r insert_inc_bullet()` Only a sample of individuals n is observed due to an encounter or detection probability p.
+`r insert_inc_bullet()` To estimate or model p, studies to generate encounter history information are conducted.
+`r insert_inc_bullet()` The statisitcal models to describe these encounter histories are capture-recapture (CR) models. 
+
+## Individual encounter probability
+
+```{r,  out.width = '65%', fig.align='center',echo=FALSE}
+knitr::include_graphics('img/EncounterHistory.png')
+```
+
+## Starting point of CR
+
+`r insert_inc_bullet()`  Random sampling of individuals: detection is a Bernoulli trial (binomial distribution)
+`r insert_inc_bullet()` CR models are, one way or another, logistic regression models or GLMs where N is unknown.
+`r insert_inc_bullet()` Status of individuals is not known. You don't observe "all zero encounter histories".
+`r insert_inc_bullet()` Initial CR models developped for geographically closed populations.
+`r insert_inc_bullet()` Heterogeneity in p is important (bias in N) and CR models are all about modeling variation in p (Otis et al. 1978)
+
+## Closed population
+
+* Demographic closure (no births, no deaths) and geographical closure (no entry, no exit)
+
+* Closed models characterization (Otis *et al.* 1978):
+   * M0 = “the null model”, p is constant in all dimensions
+   * Mt = p is a function of sample occasion , p(t)
+   * Mb = behavioral response model. Trap happiness or shyness
+   * Mh = individual heterogeneity
+   * Mbt = time + behavior, or time*behavior
+   * Mbh, Mth, Mbth
+   
+* See [\alert{Kery and Schaub (2012)}](https://books.google.fr/books?id=kd4JGs44ap4C&printsec=frontcover&hl=fr&source=gbs_ge_summary_r&cad=0#v=onepage&q&f=false) Chapter 6 to go further
+
+## Basic model M0
+
+* Model M0 can be considered as a null model
+* The main assumptions are:
+  * p is constant for all sample occasions and all individuals
+  * Encounters are independent among and within individuals
+* Encounter observations are Bernoulli random variables
+* Close to a binomial GLM or logistic regression but where N, size of some ideal
+data set, is unknown
+
+## Data augmentation (DA)
+
+`r insert_inc_bullet()` If N is known, Model M0 is a logistic regression.
+
+```{r, eval=FALSE}
+model{
+  p ~ dunif(0,1)
+  for (i in 1:N){
+    y[i] ~ dbin(p,K)
+  }
+}
+```
+
+`r insert_inc_bullet()` But N is not known. Why couldn't we put a prior on N (e.g. N ~ Dunif(0, 1000)) and analyze the model using standard methods of MCMC?
+
+`r insert_inc_bullet()` Because N would be a parameter of the model and would be updated in the MCMC algorithm. The size of the data set would have to change, which is not possible with JAGS
+
+## Data augmentation (DA), see [\alert{Royle and Dorazio paper}](https://www.researchgate.net/publication/226464578_Parameter-expanded_data_augmentation_for_Bayesian_analysis_of_pture_models)
+
+`r insert_inc_bullet()` *Concept underlying DA is adding “observations” to create a dataset composed of a known number of individuals.*
+`r insert_inc_bullet()` *For CR models, addition of a set of “all zero” encounter histories which are not observable in practice.* 
+`r insert_inc_bullet()` *The model of the augmented dataset is a zero-inflated version of either a binomial or a multinomial base model.* 
+`r insert_inc_bullet()` *Their use of DA provides a general approach for analyzing both closed and open population models of all types.*
+
+# Exercise 1: Fit Model M0 to the bear data using JAGS and data augmentation
+
+Material extracted from the day 1 of the SCR workshop in Athens in 2016 available [\alert{here}](https://sites.google.com/site/spatialcapturerecapture/workshop-athens-2016/day-1)
+
+## Instructions
+
+<!-- # you can run this exercise by typing example(beardata) -->
+* Install the package scrbook [\alert{there}](https://sites.google.com/site/spatialcapturerecapture/scrbook-r-package) and get the bear data
+
+```{r, eval=TRUE, echo=TRUE}
+library(scrbook)
+data(beardata)
+```
+
+## Step 1: Create a text file with the model description, written in the BUGS language
+
+```{r, eval=TRUE, echo=TRUE}
+cat("
+model {
+psi ~ dunif(0, 1) # DA parameter
+p ~ dunif(0,1) # prior distribution
+for (i in 1:M){
+   z[i] ~ dbern(psi) # DA latent variables
+   for(k in 1:K){
+     tmp[i,k] <- p*z[i]
+     y[i,k] ~ dbin(tmp[i,k],1)
+      }
+     }
+N<-sum(z[1:M])
+}
+",file="modelM0.txt")
+```
+
+## Step 2: Store the different values of interest
+
+```{r}
+M = 175 # number of all individuals (encountered and DA)
+nind <- dim(beardata$bearArray)[1] # number of encounter histories, i.e. encountered individuals
+ntraps <- dim(beardata$bearArray)[2] # number of traps
+K <- dim(beardata$bearArray)[3] # number of occasions
+
+# How many "all zero" encounter histories are there?
+nz <- M-nind
+
+nz
+```
+
+## Step 3: Set up the data augmentation and create the 2-d matrix "individual x occasions"
+
+```{r, eval=TRUE, echo=TRUE} 
+# Fill up an array with zeros
+Yaug <- array(0, dim=c(M,ntraps,K))
+
+# Store the real data into the first nind slots
+Yaug[1:nind,,] <- beardata$bearArray
+
+# Because traditional CR models ignore space
+# create a 2-d matrix "individuals x occasions" 
+# of 0/1 data where 1 = "captured" 0 = "not captured"
+y <- apply(Yaug,c(1,3),sum) # summarize by ind * occ
+y[y>1] <- 1                 # make sure that multiple encounters do not occur
+```
+
+## Step 4: Set input and output
+
+ * Format your data in R as a named list
+
+```{r, eval=TRUE, echo=TRUE}
+set.seed(2013)
+data <- list(y=y,M=M,K=K)
+```
+
+* Make an object containing the names of the parameters that
+you are interested in
+
+```{r, eval=TRUE, echo=TRUE}
+params <- c("psi","p","N")
+```
+
+## Step 5: Initial values
+
+* Create a function to generate random initial values
+
+```{r, eval=TRUE, echo=TRUE}
+zst = c(rep(1,nind),rbinom(M-nind, 1, .5))
+inits =  function(){list(z=zst, psi=runif(1), p=runif(1))}
+```
+
+## Step 6: Run
+
+* Compile the model and obtain posterior samples
+
+```{r, eval=FALSE, echo=TRUE}
+# Package rjags
+library(rjags)
+jm <- jags.model("modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
+fit0j <- coda.samples(jm, params, n.iter=1000)
+
+# Package jagsUI
+library(jagsUI)
+fit0j = jags(data, inits, params, model.file="modelM0.txt",n.chains=3,
+              n.iter=2000, n.burnin=1000, n.thin=1)
+```
+
+```{r, eval=TRUE, echo=FALSE, include=FALSE}
+library(rjags)
+jm <- jags.model("modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
+fit0j <- coda.samples(jm, params, n.iter=1000)
+```
+
+## Results: summary
+
+```{r, eval=FALSE, echo=FALSE}
+summary(fit0j)
+```
+
+```{r,  out.width = '70%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/summary_M0.png')
+```
+
+## Results: plot
+
+```{r, eval=TRUE, echo=FALSE}
+plot(fit0j[,c("N","psi")])
+```
+
+## Your turn
+
+* Try different values of M: 50 and 400.
+* Compare estimates (with summary function)
+* Make a plot of the posterior distribution of N for both of them
+
+## Solution M = 50
+
+```{r, eval=FALSE, echo=FALSE}
+library(scrbook)
+data(beardata)
+cat("
+model {
+psi ~ dunif(0, 1)
+p ~ dunif(0,1)
+for (i in 1:M){
+   z[i] ~ dbern(psi)
+   for(k in 1:K){
+     tmp[i,k] <- p*z[i]
+     y[i,k] ~ dbin(tmp[i,k],1)
+      }
+     }
+N<-sum(z[1:M])
+}
+",file="modelM0.txt")
+M = 400
+nind <- dim(beardata$bearArray)[1]
+ntraps <- dim(beardata$bearArray)[2]
+K <- dim(beardata$bearArray)[3]
+Yaug <- array(0, dim=c(M,ntraps,K))
+Yaug[1:nind,,] <- beardata$bearArray
+y <- apply(Yaug,c(1,3),sum)
+y[y>1] <- 1
+set.seed(2013)
+data <- list(y=y,M=M,K=K)
+params <- c("psi","p","N")
+zst = c(rep(1,nind),rbinom(M-nind, 1, .5))
+inits =  function(){list(z=zst, psi=runif(1), p=runif(1))}
+jm <- jags.model("modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
+fit0j <- coda.samples(jm, params, n.iter=1000)
+summary(fit0j)
+plot(fit0j[,"N"])
+```
+
+```{r,  out.width = '70%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/summary_M0_50.png')
+```
+
+## Solution M = 400
+
+```{r,  out.width = '70%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/summary_M0_400.png')
+```
+
+## Take home message
+
+* Choose M sufficiently large
+
+# Spatially Explicit Capture Recapture (SECR) models
+
+<!-- # Generate R code only -->
+```{r, eval=FALSE} 
+knitr::purl('BayesianStatistics_LGuery.Rmd')
+```

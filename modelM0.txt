@@ -1,0 +1,13 @@
+
+model {
+psi ~ dunif(0, 1) # DA parameter
+p ~ dunif(0,1) # prior distribution
+for (i in 1:M){
+   z[i] ~ dbern(psi) # DA latent variables
+   for(k in 1:K){
+     tmp[i,k] <- p*z[i]
+     y[i,k] ~ dbin(tmp[i,k],1)
+      }
+     }
+N<-sum(z[1:M])
+}
