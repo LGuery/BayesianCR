@@ -20,10 +20,10 @@ Click [here](https://LGuery.github.io) to see it as a whole
 
 * Many slides are largely inspired by Workshops material shared by Andy Royle and the Biometrics Working Group [**there**](https://sites.google.com/site/spatialcapturerecapture/workshop-athens-2016) or [**there**](https://sites.google.com/site/spatialcapturerecapture/workshop-tws17)
 
-* I also use a lot of materials shared by [**Olivier Gimenez}**(https://github.com/oliviergimenez/Bayesian_Workshop), [**Murray Efford**](https://www.otago.ac.nz/density/pdfs/secr-tutorial.pdf) and **Andy Royle** [**here**](https://www.stat.colostate.edu/graybillconference2014/Presentations/Royle.pdf) and [**there**](https://slideplayer.com/slide/10008078/)
+* I also use a lot of materials shared by [**Olivier Gimenez**](https://github.com/oliviergimenez/Bayesian_Workshop), [**Murray Efford**](https://www.otago.ac.nz/density/pdfs/secr-tutorial.pdf) and **Andy Royle** [**here**](https://www.stat.colostate.edu/graybillconference2014/Presentations/Royle.pdf) and [**there**](https://slideplayer.com/slide/10008078/)
 
 ## Requirements
 
 * You need to have `R` or `RStudio` installed.
 * Download `Jags` from [sourceforge](http://sourceforge.net/projects/mcmc-jags/files/) and install it.
-- Install package `R2jags` from `R` or `RStudio`.
+- Install packages `rjags` and `scrbook` from `R` or `RStudio`.
