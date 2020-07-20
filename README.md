@@ -18,9 +18,9 @@ Click [here](https://LGuery.github.io) to see it as a whole
 
 ## Credits
 
-* Many slides are largely inspired by Workshops material shared by Andy Royle and the Biometrics Working Group [\alert{there}](https://sites.google.com/site/spatialcapturerecapture/workshop-athens-2016) or [\alert{there}](https://sites.google.com/site/spatialcapturerecapture/workshop-tws17)
+* Many slides are largely inspired by Workshops material shared by Andy Royle and the Biometrics Working Group [**there**](https://sites.google.com/site/spatialcapturerecapture/workshop-athens-2016) or [**there**](https://sites.google.com/site/spatialcapturerecapture/workshop-tws17)
 
-* I also use a lot of materials shared by [\alert{Olivier Gimenez}](https://github.com/oliviergimenez/Bayesian_Workshop), [\alert{Murray Efford}](https://www.otago.ac.nz/density/pdfs/secr-tutorial.pdf) and \alert{Andy Royle} [\alert{here}](https://www.stat.colostate.edu/graybillconference2014/Presentations/Royle.pdf) and [\alert{there}](https://slideplayer.com/slide/10008078/)
+* I also use a lot of materials shared by [**Olivier Gimenez}**(https://github.com/oliviergimenez/Bayesian_Workshop), [**Murray Efford**](https://www.otago.ac.nz/density/pdfs/secr-tutorial.pdf) and **Andy Royle** [**here**](https://www.stat.colostate.edu/graybillconference2014/Presentations/Royle.pdf) and [**there**](https://slideplayer.com/slide/10008078/)
 
 ## Requirements
 
