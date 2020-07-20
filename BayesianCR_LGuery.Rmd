@@ -354,5 +354,5 @@ knitr::include_graphics('img/summary_M0_400.png')
 
 <!-- # Generate R code only -->
 ```{r, eval=FALSE} 
-knitr::purl('BayesianStatistics_LGuery.Rmd')
+knitr::purl('BayesianCR_LGuery.Rmd')
 ```
