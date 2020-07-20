@@ -14,7 +14,7 @@ Click [here](https://LGuery.github.io) to see it as a whole
 
 * All material is prepared in `R`
 * `R Markdown` is used to write reproducible material (`R` code also available).
-* Material available via Github [here](https://github.com/LGuery/Bayesian_Workshop_AOTTP).
+* Material available via Github [here](https://github.com/LGuery/BayesianCR).
 
 ## Credits
 
