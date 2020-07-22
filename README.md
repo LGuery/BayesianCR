@@ -7,8 +7,10 @@ Click [here](https://LGuery.github.io) to see it as a whole
 ## Outline
 
 1. Bayesian Capture-Recapture models in closed population
-  * Exercise 1: Fit Model M0 to the bear data using JAGS and data augmentation
+  * Example 1: Fit Model M0 to the bear data using JAGS and data augmentation
+
 2. Spatially Explicit Capture Recapture (SECR) models
+  * Example 2: Fit a basic SECR model in closed population with data augmentation
 
 ## Slides, code and data
 
