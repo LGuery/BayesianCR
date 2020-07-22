@@ -1,0 +1,15 @@
+
+model {
+psi ~ dunif(0, 1) # DA parameter
+p ~ dunif(0,1) # prior distribution
+for (i in 1:M){
+   z[i] ~ dbern(psi) # binary DA latent variables which indicates if individual i is
+                     # a member of the population - Abundance is just the sum of 
+                     # these binary latent variables
+   for(k in 1:K){
+     tmp[i,k] <- p*z[i]
+     y[i,k] ~ dbin(tmp[i,k],1) # likelihood
+      }
+     }
+N <- sum(z[1:M])
+}
