@@ -28,4 +28,7 @@ Click [here](https://LGuery.github.io) to see it as a whole
 
 * You need to have `R` or `RStudio` installed.
 * Download `Jags` from [sourceforge](http://sourceforge.net/projects/mcmc-jags/files/) and install it.
-- Install packages `rjags` and `scrbook` from `R` or `RStudio`.
+* Install packages `rjags` and `scrbook` from `R` or `RStudio`.
+* Click on the green **clone** button to clone the repository on your own local machine either with the zip file, or directly in Rstudio ([help 12.3](https://happygitwithr.com/rstudio-git-github.html))
+
+

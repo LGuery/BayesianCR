@@ -70,11 +70,15 @@ knitr::include_graphics('img/SCR_book.png')
 
 ## Outline
 
-1. Bayesian Capture-Recapture models in closed population
-  * Example 1: Fit Model M0 to the bear data using JAGS and data augmentation
+* Bayesian Capture-Recapture models in closed population
+  + Example 1: Fit Model M0 to the bear data using JAGS and data augmentation
+  + Example 2: Fit Model M0 to the bear data using MLE
 
-2. Spatially Explicit Capture Recapture (SECR) models
-  * Example 2: Fit a basic SECR model in closed population with data augmentation
+`r insert_pause()`
+
+* Spatially Explicit Capture Recapture (SECR) models in closed population
+  + Example 3: Fit a basic SECR model in closed population with data augmentation
+  + Example 4: Imagine an application of SECR to tuna fisheries
 
 ## JAGS `R` Packages
 
@@ -92,7 +96,7 @@ Different packages can be used to run SECR models from R such as:
 
 `r insert_inc_bullet()` [\alert{scrbook}](https://sites.google.com/site/spatialcapturerecapture/) from the [\alert{Spatial Capture-Recapture} book](https://books.google.fr/books?hl=fr&lr=&id=RO08-S-amZMC&oi=fnd&pg=PR1&dq=spatial+capture+recapture+book&ots=e8zwMmCF3G&sig=oi804aeL6cfrvwaAueo1NpNLNp0#v=onepage&q=spatial%20capture%20recapture%20book&f=false) by Andy Royle, Richard Chandler, Rahel Sollmann and Beth Gardner
 
-`r insert_inc_bullet()`  [\alert{secr}](https://cran.r-project.org/web/packages/secr/index.html) developped by Murray Efford
+`r insert_inc_bullet()`  [\alert{secr}](https://cran.r-project.org/web/packages/secr/index.html) developped by Murray Efford using MLE
 
 `r insert_inc_bullet()`  [\alert{oSCR}](https://sites.google.com/site/spatialcapturerecapture/oscr-package) developed by Chris Sutherland, Andy Royle, and Dan Linden
 
@@ -100,9 +104,9 @@ Different packages can be used to run SECR models from R such as:
 
 ## Capture-recapture, quésako?
 
-`r insert_inc_bullet()` Information on N or density D is the main interest.
-`r insert_inc_bullet()` Only a sample of individuals n is observed due to an encounter or detection probability p.
-`r insert_inc_bullet()` To estimate or model p, studies to generate encounter history information are conducted.
+`r insert_inc_bullet()` Information on *N* or density *D* is the main interest.
+`r insert_inc_bullet()` Only a sample of individuals *n* is observed due to an encounter or detection probability *p*.
+`r insert_inc_bullet()` To estimate or model *p*, studies to generate encounter history information are conducted.
 `r insert_inc_bullet()` The statisitcal models to describe these encounter histories are capture-recapture (CR) models. 
 
 ## Individual encounter probability
@@ -113,40 +117,90 @@ knitr::include_graphics('img/EncounterHistory.png')
 
 ## Starting point of CR
 
-`r insert_inc_bullet()`  Random sampling of individuals: detection is a Bernoulli trial (binomial distribution)
-`r insert_inc_bullet()` CR models are, one way or another, logistic regression models or GLMs where N is unknown.
+* Random sampling of individuals: detection is a Bernoulli trial (binomial distribution).
+
+$$Pr(y_{ik}=1) \sim Bernoulli(p_{ik})$$
+
+```{r}
+
+# Simulating Bernoulli trials
+# Simulate random encounter events with p = 0.25 for an individual
+# Outcome y = 1 means "captured" and y=0 means "not captured"
+p <- 0.25
+K <- 4 # sample occasions
+# one encounter history
+set.seed(1987)
+rbinom(n=K, size=1, prob=p)
+```
+
+## Starting point of CR
+
+`r insert_inc_bullet()` If *p* is the probability of ever being encountered during the study
+`r insert_inc_bullet()` The heuristic or canonical estimator of *N* can be described as:
+$$\hat{N}=\frac{n}{\hat{p}}$$
+
+`r insert_inc_bullet()` Random sampling of individuals: detection is a Bernoulli trial (binomial distribution).
+
+`r insert_inc_bullet()` CR models are, one way or another, logistic regression models or GLMs where *N* is unknown.
+
+## Starting point of CR
+
 `r insert_inc_bullet()` Status of individuals is not known. You don't observe "all zero encounter histories".
+
 `r insert_inc_bullet()` Initial CR models developped for geographically closed populations.
-`r insert_inc_bullet()` Heterogeneity in p is important (bias in N) and CR models are all about modeling variation in p (Otis et al. 1978)
 
-## Closed population
+`r insert_inc_bullet()` Heterogeneity in *p* is important (bias in *N*) and CR models are all about modeling variation in *p* ([\alert{Otis}](https://www.jstor.org/stable/pdf/3830650.pdf?casa_token=DNEIMyK0MwUAAAAA:3208cbAX4Pgu0XrawsmAkPKuJ3rP5IoXPqx0d8x-cD_CAtvdfxPzgKky7-ziV8YqSQd_2za0RHLXR7vKeeg7PZ5F59QcGGNW_8h6QnGzEd3n4CM-5sw) *et al.* 1978)
 
-`r insert_inc_bullet()` Demographic closure (no births, no deaths) and geographical closure (no entry, no exit)
+## Classical closed population
 
-* Closed models characterization (Otis *et al.* 1978):
-   * M0 = “the null model”, p is constant in all dimensions
-   * Mt = p is a function of sample occasion , p(t)
-   * Mb = behavioral response model. Trap happiness or shyness
-   * Mh = individual heterogeneity
-   * Mbt = time + behavior, or time*behavior
-   * Mbh, Mth, Mbth
+* Demographic closure (no births, no deaths) and geographical closure (no entry, no exit)
+
+`r insert_pause()`
+
+* Closed models characterization ([\alert{Otis}](https://www.jstor.org/stable/pdf/3830650.pdf?casa_token=DNEIMyK0MwUAAAAA:3208cbAX4Pgu0XrawsmAkPKuJ3rP5IoXPqx0d8x-cD_CAtvdfxPzgKky7-ziV8YqSQd_2za0RHLXR7vKeeg7PZ5F59QcGGNW_8h6QnGzEd3n4CM-5sw) *et al.* 1978):
+   + M0 = “the null model”, p is constant in all dimensions
+   + Mt = p is a function of sample occasion , p(t)
+   + Mb = behavioral response model. Trap happiness or shyness
+   + Mh = individual heterogeneity
+   + Mbt = time + behavior, or time*behavior
+   + Mbh, Mth, Mbth
    
-`r insert_inc_bullet()` See [\alert{Kery and Schaub (2012)}](https://books.google.fr/books?id=kd4JGs44ap4C&printsec=frontcover&hl=fr&source=gbs_ge_summary_r&cad=0#v=onepage&q&f=false) Chapter 6 to go further
+`r insert_pause()`
+
+* See [\alert{Kery and Schaub (2012)}](https://books.google.fr/books?id=kd4JGs44ap4C&printsec=frontcover&hl=fr&source=gbs_ge_summary_r&cad=0#v=onepage&q&f=false) Chapter 6 to go further
 
 ## Basic model M0
 
-`r insert_inc_bullet()` Model M0 can be considered as a null model
+* Model M0 can be considered as the null model
+
+`r insert_pause()`
 
 * The main assumptions are:
-  * p is constant for all sample occasions and all individuals
-  * Encounters are independent among and within individuals
+  + p is constant for all sample occasions and all individuals
+  + Encounters are independent among and within individuals
+
+`r insert_pause()`
 
 `r insert_inc_bullet()` Encounter observations are Bernoulli random variables
-`r insert_inc_bullet()` Close to a binomial GLM or logistic regression but where N, size of some ideal data set, is unknown
+
+`r insert_inc_bullet()` Close to a binomial GLM or logistic regression but where *N*, size of some ideal data set, is unknown
+
+## Inference in closed population models
+
+* Likelihood inference:
+  + `R`: write custom likelihood function use `nlm()` or `optim()` 
+  + black box programs: e.g., Program MARK/RMark/ESURGE
+
+`r insert_pause()`
+
+* Bayesian inference:
+  + `R`: write a custom sampler
+  + BUGS/JAGS 
+  + Stan, etc.
 
 ## N unknown, so what?
 
-`r insert_inc_bullet()` If N is known, Model M0 is a logistic regression.
+`r insert_inc_bullet()` If *N* is known, Model M0 is a logistic regression.
 
 ```{r, eval=FALSE}
 model{
@@ -157,9 +211,9 @@ model{
 }
 ```
 
-`r insert_inc_bullet()` But N is not known. Why couldn't we put a prior on N (e.g. N ~ dunif(0, 1000)) and analyze the model using standard methods of MCMC?
+`r insert_inc_bullet()` But *N* is not known. Why couldn't we put a prior on N** (e.g. *N* ~ dunif(0, 1000)) and analyze the model using standard methods of MCMC?
 
-`r insert_inc_bullet()` Because N would be a parameter of the model and would be updated in the MCMC algorithm. The size of the data set would have to change, which is not possible with JAGS
+`r insert_inc_bullet()` Because *N* would be a parameter of the model and would be updated in the MCMC algorithm. The size of the data set would have to change, which is not possible with JAGS.
 
 ## Data augmentation (DA), see [\alert{Royle and Dorazio paper}](https://www.researchgate.net/publication/226464578_Parameter-expanded_data_augmentation_for_Bayesian_analysis_of_pture_models)
 
@@ -175,9 +229,11 @@ knitr::include_graphics('img/EncounterHistory.png')
 
 # Example 1: Fit Model M0 to the bear data using JAGS and data augmentation
 
-Material extracted from the day 1 of the SCR workshop in Athens in 2016 available [\alert{here}](https://sites.google.com/site/spatialcapturerecapture/workshop-athens-2016/day-1)
-
 ## Instructions
+
+* Material extracted from the day 1 of the SCR workshop in Athens in 2016 available [\alert{here}](https://sites.google.com/site/spatialcapturerecapture/workshop-athens-2016/day-1)
+
+`r insert_pause()`
 
 <!-- # you can run this exercise by typing example(beardata) -->
 * Install the package scrbook [\alert{there}](https://sites.google.com/site/spatialcapturerecapture/scrbook-r-package) and get the bear data
@@ -196,6 +252,26 @@ data(beardata)
 
 ```{r,  out.width = '30%', fig.align='center',echo=FALSE}
 knitr::include_graphics('img/Fortdrumarea.png')
+```
+
+## Step 1: Create a text file with the model description, written in the BUGS language
+
+```{r, eval=FALSE, echo=TRUE}
+cat("
+model {
+psi ~ dunif(0, 1)
+p ~ dunif(0,1)
+for (i in 1:M){
+   z[i] ~ dbern(psi)
+   
+   for(k in 1:K){
+     tmp[i,k] <- p*z[i]
+     y[i,k] ~ dbin(tmp[i,k],1)
+      }
+     }
+N <- sum(z[1:M])
+}
+",file="code/modelM0.txt")
 ```
 
 ## Step 1: Create a text file with the model description, written in the BUGS language
@@ -366,15 +442,53 @@ knitr::include_graphics('img/summary_M0_50.png')
 knitr::include_graphics('img/summary_M0_400.png')
 ```
 
-# Spatially Explicit Capture Recapture (SECR) models
+# Example 2: Fit Model M0 to the bear data using MLE
 
-## Some references
+## Define a log-likelihood function for model M0
 
-`r insert_inc_bullet()` Efford (2004): initial idea, ad hoc simulation based approach
+```{r}
+M0.lik <-function(parameters){
+  p <- plogis(parameters[1])
+  n0 <- exp(parameters[2])
+  N <- n + n0
+  loglik.part1 <- lgamma(N+1) - lgamma(n0+1)
+  loglik.part2 <- matrix(NA, n, K)
+  for(i in 1:n){
+    for(k in 1:K){
+      loglik.part2[i,k] <- sum( Y[i,k]*log(p) + (1-Y[i,k])*log(1-p) )
+    }
+  }
+  loglik.part3 <- n0 * sum(rep(log(1-p),K))
+  -1 * (loglik.part1 + sum(loglik.part2) + loglik.part3)
+  }
+```
 
-`r insert_inc_bullet()` Likelihood-based approaches: Borchers and Efford (2008), Efford *et al.* (2008, 2009)
+## Find the MLEs for the bear data
 
-`r insert_inc_bullet()` Hierarchical MCMC approach: Royle and Young (2008), Royle *et al.* (2009*ab*), Royle and Gardner (2010), Gardner *et al.* (2009, 2010)
+```{r}
+# Set up the data
+
+Y <- apply(beardata$bearArray,c(1,3),max)
+n <- nrow(Y)
+K <- ncol(Y)
+
+# fit the model
+fm.M0 <- nlm(M0.lik,rep(0,2),hessian=TRUE)
+
+# estimated p
+(phat <- plogis(fm.M0$est[1]))
+
+# estimated N
+(Nhat <- n+exp(fm.M0$est[2]))
+
+# SE of Nhat
+Nhat_SE <- sqrt((exp(fm.M0$est[2])^2)*solve(fm.M0$hess)[2,2])
+
+# confidence intervals for Nhat
+(Nhat + c(-1.96, 1.96)*Nhat_SE)
+```
+
+# Spatially Explicit Capture Recapture (SECR) models in closed population
 
 ## Why SECR models?
 
@@ -382,7 +496,7 @@ knitr::include_graphics('img/summary_M0_400.png')
 
 `r insert_inc_bullet()` Camera traps
 
-`r insert_inc_bullet()` DNA sampling (Scat picked up by searching space, Urine on scent sticks or in snow, Tissue samples from treed individuals, Hair snares)
+`r insert_inc_bullet()` DNA sampling (Scat picked up by searching space, Urine on scent sticks or in snow, Tissue samples from treed individuals, Hair snares...)
 
 `r insert_inc_bullet()` Acoustic sampling (whales, birds, bats)
 
@@ -392,38 +506,47 @@ knitr::include_graphics('img/Pics_SECR.png')
 
 ## Main Goals
 
-`r insert_inc_bullet()` Extension of CR to make use of encounter location data in order to study spatial aspects of animal populations
+* Extension of CR (Improvement of Mx) to make use of encounter location data in order to study spatial aspects of animal populations
 
-`r insert_inc_bullet()` Examples: spatial variation in animal density, resource selection or animal movement
+`r insert_pause()`
 
-`r insert_inc_bullet()` Models developed to deal explicitly with 2 main problems associated with density estimation in trapping studies
+* Examples of applications: spatial variation in animal density, resource selection or animal movement
 
-`r insert_inc_bullet()` 1 -Unknown sample area varies with trap layout – home range size
+`r insert_pause()`
 
-`r insert_inc_bullet()` 2- Heterogeneity in capture probability associated with animal location relative to traps 
+* Models developed to deal explicitly with 2 main problems associated with density estimation in trapping studies
+  + Unknown sample area varies with trap layout – home range size
+  + Heterogeneity in capture probability associated with spatial location of individuals (heterogeneity in *p*) relative to traps 
 
 ## Spatial point process model
 
-`r insert_inc_bullet()` Spatial distribution of organisms is naturally described by point process models
-`r insert_inc_bullet()` In the CR context, Efford (2004, Oikos) described two concepts: the biological or state process and the observation process
+* Spatial distribution of organisms is naturally described by point process models
+
+`r insert_pause()`
+
+* In the CR context, Efford (2004, Oikos) described two concepts: 
+  + Concept 1: the biological or state process
+  + Concept 2: the observation process
 
 ## Concept 1: Biological or state process
 
-Describe how individuals are distributed in space = a point process model for “activity centers” or home range centers
+Describe how individuals are distributed in space = a point process model for “activity centers” or home range centers:
 
 `r insert_inc_bullet()` $s_{i} =$ coordinates of the activity center or home range center for individual i
 
 `r insert_inc_bullet()` ${s_{1}, s_{2}, ..., s_{N}} =$ realization of a point process
 
-`r insert_inc_bullet()` $s_{i} \sim Uniform(S); S =$ state-space of point process, i.e. the spatial region where the N activity centers occur
+`r insert_inc_bullet()` $s_{i} \sim Uniform(S); S =$ state-space of point process, i.e. the spatial region where the *N* activity centers occur (the frequentist literature tends to call it a “mask”). Activity centers are distributed independent of one another and uniformly in the plane = homogeneous point process
 
-```{r,  out.width = '60%', fig.align = 'center', echo = FALSE}
+## Concept 1: Biological or state process
+
+```{r,  out.width = '80%', fig.align = 'center', echo = FALSE}
 knitr::include_graphics('img/StateProcess.png')
 ```
 
 ## Concept 2: Observation process
 
-Describe P(encounter in trap) conditional on where an individual lives ($s_{i}$)
+Describe *p*(encounter in trap) conditional on where an individual lives ($s_{i}$)
 
 `r insert_inc_bullet()` $y_{i,j} | s_{i} \sim Bern( p(x_{j}, s_{i}) )$
 
@@ -434,7 +557,7 @@ Describe P(encounter in trap) conditional on where an individual lives ($s_{i}$)
 `r insert_inc_bullet()` $d_{ij} = || s_{i}–x_{j} || =  \sqrt{(s_{1i}–x_{1i})^2  + (s_{2i}–x_{2i})^2}$
 
 ## Concept 2: Observation process
-```{r,  out.width = '100%', fig.align = 'center', echo = FALSE}
+```{r,  out.width = '80%', fig.align = 'center', echo = FALSE}
 knitr::include_graphics('img/ObsProcess.png')
 ```
 
@@ -465,11 +588,35 @@ legend(50, 1, c("p0=0.7, sigma=20", "p0=0.7, sigma=30", "p0=0.7, sigma=40"),
 
 `r insert_inc_bullet()` SCR models are GLMMs where N is unknown
 
-`r insert_inc_bullet()` MLE based on marginal likelihood: Borchers, D.L. and M.G. Efford. 2008. Spatially explicit maximum likelihood methods for capture-recapture studies. Biometrics 64:377-385 -> `R` package ‘secr’ (M.G. Efford)
+`r insert_inc_bullet()` [\alert{Efford (2004)}](https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.0030-1299.2004.13043.x?casa_token=CTVCYHU77pIAAAAA:rVbPSxN25E5aO---9eUaeHZXj_os3iJ4Gyvpr8cqREHp6KAj7u-0QmhraqVZqTwJUWs7SBkGYRRI6gU): initial idea, ad hoc simulation based approach
 
-`r insert_inc_bullet()` Bayesian Analysis by MCMC (data augmentation): Royle, J.A. and K.Y. Young. 2008. A hierarchical model for spatial capture-recapture data. Ecology 89:2281-2289.
+`r insert_inc_bullet()` [\alert{Paper}](https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1541-0420.2007.00927.x?casa_token=nEPo1DwgxtcAAAAA:AGGkQ3j9TKmtZ89wnr8G-J4brwwlXf8SHPyRgOkMCPIb3McACv_tGpqo0RWTWrAWMP_Sb919LW8JpuU) on MLE based on marginal likelihood: Borchers, D.L. and M.G. Efford. 2008. Spatially explicit maximum likelihood methods for capture-recapture studies. Biometrics 64:377-385 -> `R` package [`secr`](https://cran.r-project.org/web/packages/secr/secr.pdf) (M.G. Efford)
 
-# Example 2: Fit a basic SECR model in closed population with data augmentation
+`r insert_inc_bullet()` [\alert{Paper}](https://esajournals.onlinelibrary.wiley.com/doi/pdf/10.1890/07-0601.1?casa_token=CGuVtrcUJXYAAAAA:cuVC6wPdxoN8iUB8kG2URQbKb0AsCdSM5Ruu2vynTiHbZhafx9yyveAt1DI6saKH7NV45aIurkWj4Yg) on Bayesian Analysis by MCMC (data augmentation): Royle, J.A. and K.Y. Young. 2008. A hierarchical model for spatial capture-recapture data. Ecology 89:2281-2289.
+
+`r insert_inc_bullet()` Other references on hierarchical MCMC approach: Gardner *et al.* ([\alert{2009}](https://wildlife.onlinelibrary.wiley.com/doi/pdf/10.2193/2009-101?casa_token=8thCSW3jELMAAAAA:a0rEjWtlgmLRRBv71-lG4nT8fgXza21zS_qwzigR7Wm99C1jDKhFAKWKtFXpQ1KOdRlNfxyDYGClqi0), [\alert{2010}](https://esajournals.onlinelibrary.wiley.com/doi/pdf/10.1890/09-0804.1?casa_token=X5Je7K_XhhEAAAAA:1EOLZbSYqHWJDYW-WEjMzL1Di8UsS0eWmLlu8LtDA9Kuak8H5iPSx3M3LUciCWOfvkTc_nuyc55lxYI))
+
+## Ingredients
+
+SCR is a model of 3-dimensional encounter histories (i, j, k):
+
+`r insert_inc_bullet()` Encounter data: Available individual IDs
+
+```{r,  out.width = '50%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/EDF.png')
+```
+
+## Ingredients
+
+SCR is a model of 3-dimensional encounter histories (i, j, k):
+
+`r insert_inc_bullet()` Trap data: Network of fixed detectors in 2D with known localisations
+
+```{r,  out.width = '50%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/TDF.png')
+```
+
+# Example 3: Fit a basic SECR model in closed population with data augmentation
 
 ## Instructions
 
@@ -479,6 +626,8 @@ legend(50, 1, c("p0=0.7, sigma=20", "p0=0.7, sigma=30", "p0=0.7, sigma=40"),
 encounters <- read.csv("dat/encounterData.csv")
 encounters[1:4,] # First 4 rows of data
 ```
+
+`r insert_pause()`
 
 * Import trap coordinates
 
@@ -502,7 +651,6 @@ y3D <- table(encounters$animalID, encounters$trapID,
 
 ## Step 0: Create 3D capture history array using the table function
 
-Add missing traps and occasions in the levels to have a complete 3D array and order
 ```{r, eval=TRUE, echo=TRUE}
 y3D[1:4,1:10,1] ## Data on first 4 ind at first 10 trap on k=1
 
@@ -615,6 +763,8 @@ set.seed(2020)
 jd <- list(y=yz, J=J, K=K, M=M, x=traps, xlim=c(0,1), ylim=c(0,1))
 ```
 
+`r insert_pause()`
+
 * Make an object containing the names of the parameters that
 you are interested in
 
@@ -657,9 +807,49 @@ knitr::include_graphics('img/summary_SECR0.png')
 plot(jc)
 ```
 
+# Example 4: Imagine an application of SECR to tuna fisheries
+
 ## Your turn
 
-## More complex model
+* Story: Purse senners fishing tropical tunas under drifting Fish Aggregating Devices (dFAD)
+
+`r insert_inc_bullet()` Goal: Imagine how to use SECR to estimate dFADs density
+
+```{r,  out.width = '40%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/dFAD.jpg')
+```
+
+## Your turn
+
+* Hint on available data:
+  + Fishing activities (grid with activities locations)
+  + dFADs IDs
+  + Boats trajectories
+
+```{r,  out.width = '80%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/datPS.png')
+```
+
+## Solution
+
+* Transfer the method to estimate non-tracked buoys density considering:
+  + dFADs as animals
+  + Traps = square/cell of 1*1 degree
+  + Detectors = vessels with activities on dFADs
+  + Occasion = Day
+
+```{r,  out.width = '40%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/VMS.png')
+```
+
+## What you could obtain
+
+```{r,  out.width = '80%', fig.align = 'center', echo = FALSE}
+knitr::include_graphics('img/dFADdensity.png')
+```
+
+
+## More complex models
 
 `r insert_inc_bullet()` Open population ouverte (survival, recruitment…)
 `r insert_inc_bullet()` Time and/or sex effect

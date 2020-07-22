@@ -39,6 +39,18 @@ knitr::include_graphics('img/SCR_book.png')
 knitr::include_graphics('img/EncounterHistory.png')
 
 
+## ------------------------------------------------------------------------------
+
+# Simulating Bernoulli trials
+# Simulate random encounter events with p = 0.25 for an individual
+# Outcome y = 1 means "captured" and y=0 means "not captured"
+p <- 0.25
+K <- 4 # sample occasions
+# one encounter history
+set.seed(1987)
+rbinom(n=K, size=1, prob=p)
+
+
 ## ---- eval=FALSE---------------------------------------------------------------
 #> model{
 #>   p ~ dunif(0,1)
@@ -59,6 +71,24 @@ data(beardata)
 
 ## ----  out.width = '30%', fig.align='center',echo=FALSE------------------------
 knitr::include_graphics('img/Fortdrumarea.png')
+
+
+## ---- eval=FALSE, echo=TRUE----------------------------------------------------
+#> cat("
+#> model {
+#> psi ~ dunif(0, 1)
+#> p ~ dunif(0,1)
+#> for (i in 1:M){
+#>    z[i] ~ dbern(psi)
+#> 
+#>    for(k in 1:K){
+#>      tmp[i,k] <- p*z[i]
+#>      y[i,k] ~ dbin(tmp[i,k],1)
+#>       }
+#>      }
+#> N <- sum(z[1:M])
+#> }
+#> ",file="code/modelM0.txt")
 
 
 ## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
@@ -194,15 +224,55 @@ knitr::include_graphics('img/summary_M0_50.png')
 knitr::include_graphics('img/summary_M0_400.png')
 
 
+## ------------------------------------------------------------------------------
+M0.lik <-function(parameters){
+  p <- plogis(parameters[1])
+  n0 <- exp(parameters[2])
+  N <- n + n0
+  loglik.part1 <- lgamma(N+1) - lgamma(n0+1)
+  loglik.part2 <- matrix(NA, n, K)
+  for(i in 1:n){
+    for(k in 1:K){
+      loglik.part2[i,k] <- sum( Y[i,k]*log(p) + (1-Y[i,k])*log(1-p) )
+    }
+  }
+  loglik.part3 <- n0 * sum(rep(log(1-p),K))
+  -1 * (loglik.part1 + sum(loglik.part2) + loglik.part3)
+  }
+
+
+## ------------------------------------------------------------------------------
+# Set up the data
+
+Y <- apply(beardata$bearArray,c(1,3),max)
+n <- nrow(Y)
+K <- ncol(Y)
+
+# fit the model
+fm.M0 <- nlm(M0.lik,rep(0,2),hessian=TRUE)
+
+# estimated p
+(phat <- plogis(fm.M0$est[1]))
+
+# estimated N
+(Nhat <- n+exp(fm.M0$est[2]))
+
+# SE of Nhat
+Nhat_SE <- sqrt((exp(fm.M0$est[2])^2)*solve(fm.M0$hess)[2,2])
+
+# confidence intervals for Nhat
+(Nhat + c(-1.96, 1.96)*Nhat_SE)
+
+
 ## ----  out.width = '70%', fig.align = 'center', echo = FALSE-------------------
 knitr::include_graphics('img/Pics_SECR.png')
 
 
-## ----  out.width = '60%', fig.align = 'center', echo = FALSE-------------------
+## ----  out.width = '80%', fig.align = 'center', echo = FALSE-------------------
 knitr::include_graphics('img/StateProcess.png')
 
 
-## ----  out.width = '100%', fig.align = 'center', echo = FALSE------------------
+## ----  out.width = '80%', fig.align = 'center', echo = FALSE-------------------
 knitr::include_graphics('img/ObsProcess.png')
 
 
@@ -217,6 +287,14 @@ plot(function(d) 0.7*exp(-d^2/(2*40^2)), 0, 100, add=TRUE, col="orange",
      lwd=2)
 legend(50, 1, c("p0=0.7, sigma=20", "p0=0.7, sigma=30", "p0=0.7, sigma=40"),
        lty=1, lwd=2, col=c("black", "blue", "orange"))
+
+
+## ----  out.width = '50%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/EDF.png')
+
+
+## ----  out.width = '50%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/TDF.png')
 
 
 ## ---- eval=TRUE, echo=FALSE----------------------------------------------------
@@ -364,6 +442,22 @@ knitr::include_graphics('img/summary_SECR0.png')
 
 ## ---- eval=TRUE, echo=FALSE----------------------------------------------------
 plot(jc)
+
+
+## ----  out.width = '40%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/dFAD.jpg')
+
+
+## ----  out.width = '80%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/datPS.png')
+
+
+## ----  out.width = '40%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/VMS.png')
+
+
+## ----  out.width = '80%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/dFADdensity.png')
 
 
 ## ---- eval=FALSE, echo=FALSE---------------------------------------------------
