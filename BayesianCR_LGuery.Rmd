@@ -669,6 +669,6 @@ plot(jc)
 `r insert_inc_bullet()` Mixing count data with SECR data
 
 <!-- # Generate R code only -->
-```{r, eval=FALSE} 
+```{r, eval=FALSE, echo=FALSE} 
 knitr::purl('BayesianCR_LGuery.Rmd')
 ```

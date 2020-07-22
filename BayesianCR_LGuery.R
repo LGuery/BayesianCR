@@ -48,9 +48,17 @@ knitr::include_graphics('img/EncounterHistory.png')
 #> }
 
 
+## ----  out.width = '65%', fig.align='center',echo=FALSE------------------------
+knitr::include_graphics('img/EncounterHistory.png')
+
+
 ## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
 library(scrbook)
 data(beardata)
+
+
+## ----  out.width = '30%', fig.align='center',echo=FALSE------------------------
+knitr::include_graphics('img/Fortdrumarea.png')
 
 
 ## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
@@ -59,20 +67,22 @@ model {
 psi ~ dunif(0, 1) # DA parameter
 p ~ dunif(0,1) # prior distribution
 for (i in 1:M){
-   z[i] ~ dbern(psi) # DA latent variables
+   z[i] ~ dbern(psi) # binary DA latent variables which indicates if individual i is
+                     # a member of the population - Abundance is just the sum of 
+                     # these binary latent variables
    for(k in 1:K){
      tmp[i,k] <- p*z[i]
-     y[i,k] ~ dbin(tmp[i,k],1)
+     y[i,k] ~ dbin(tmp[i,k],1) # likelihood
       }
      }
-N<-sum(z[1:M])
+N <- sum(z[1:M])
 }
-",file="modelM0.txt")
+",file="code/modelM0.txt")
 
 
 ## ------------------------------------------------------------------------------
 M = 175 # number of all individuals (encountered and DA)
-nind <- dim(beardata$bearArray)[1] # number of encounter histories, i.e. encountered individuals
+nind <- dim(beardata$bearArray)[1] # number of encounter histories (individuals)
 ntraps <- dim(beardata$bearArray)[2] # number of traps
 K <- dim(beardata$bearArray)[3] # number of occasions
 
@@ -89,15 +99,15 @@ Yaug <- array(0, dim=c(M,ntraps,K))
 # Store the real data into the first nind slots
 Yaug[1:nind,,] <- beardata$bearArray
 
-# Because traditional CR models ignore space
-# create a 2-d matrix "individuals x occasions" 
-# of 0/1 data where 1 = "captured" 0 = "not captured"
+# Because traditional CR models ignore space create a 2-d matrix 
+# "individuals x occasions"  of 0/1 data where 1 = "captured" 0 = "not captured"
+
 y <- apply(Yaug,c(1,3),sum) # summarize by ind * occ
 y[y>1] <- 1                 # make sure that multiple encounters do not occur
 
 
 ## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
-set.seed(2013)
+set.seed(2020)
 data <- list(y=y,M=M,K=K)
 
 
@@ -113,18 +123,18 @@ inits =  function(){list(z=zst, psi=runif(1), p=runif(1))}
 ## ---- eval=FALSE, echo=TRUE----------------------------------------------------
 #> # Package rjags
 #> library(rjags)
-#> jm <- jags.model("modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
+#> jm <- jags.model("code/modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
 #> fit0j <- coda.samples(jm, params, n.iter=1000)
 #> 
 #> # Package jagsUI
 #> library(jagsUI)
-#> fit0j = jags(data, inits, params, model.file="modelM0.txt",n.chains=3,
+#> fit0j = jags(data, inits, params, model.file="code/modelM0.txt",n.chains=3,
 #>               n.iter=2000, n.burnin=1000, n.thin=1)
 
 
 ## ---- eval=TRUE, echo=FALSE, include=FALSE-------------------------------------
 library(rjags)
-jm <- jags.model("modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
+jm <- jags.model("code/modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
 fit0j <- coda.samples(jm, params, n.iter=1000)
 
 
@@ -156,7 +166,7 @@ plot(fit0j[,c("N","psi")])
 #>      }
 #> N<-sum(z[1:M])
 #> }
-#> ",file="modelM0.txt")
+#> ",file="code/modelM0.txt")
 #> M = 400
 #> nind <- dim(beardata$bearArray)[1]
 #> ntraps <- dim(beardata$bearArray)[2]
@@ -170,7 +180,7 @@ plot(fit0j[,c("N","psi")])
 #> params <- c("psi","p","N")
 #> zst = c(rep(1,nind),rbinom(M-nind, 1, .5))
 #> inits =  function(){list(z=zst, psi=runif(1), p=runif(1))}
-#> jm <- jags.model("modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
+#> jm <- jags.model("code/modelM0.txt", data=data, inits=inits, n.chains=3, n.adapt=1000)
 #> fit0j <- coda.samples(jm, params, n.iter=1000)
 #> summary(fit0j)
 #> plot(fit0j[,"N"])
@@ -184,6 +194,178 @@ knitr::include_graphics('img/summary_M0_50.png')
 knitr::include_graphics('img/summary_M0_400.png')
 
 
-## ---- eval=FALSE---------------------------------------------------------------
+## ----  out.width = '70%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/Pics_SECR.png')
+
+
+## ----  out.width = '60%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/StateProcess.png')
+
+
+## ----  out.width = '100%', fig.align = 'center', echo = FALSE------------------
+knitr::include_graphics('img/ObsProcess.png')
+
+
+## ---- eval=TRUE,echo=FALSE-----------------------------------------------------
+plot(function(d) 0.7*exp(-d^2/(2*20^2)), cex.lab=1.3,
+     from=0, to=100, ylim=c(0,1), main="",
+     xlab="Distance (m) between activity center and trap",
+     ylab="Detection probability", lwd=2)
+plot(function(d) 0.7*exp(-d^2/(2*30^2)), 0, 100, add=TRUE, col="blue",
+     lwd=2)
+plot(function(d) 0.7*exp(-d^2/(2*40^2)), 0, 100, add=TRUE, col="orange",
+     lwd=2)
+legend(50, 1, c("p0=0.7, sigma=20", "p0=0.7, sigma=30", "p0=0.7, sigma=40"),
+       lty=1, lwd=2, col=c("black", "blue", "orange"))
+
+
+## ---- eval=TRUE, echo=FALSE----------------------------------------------------
+encounters <- read.csv("dat/encounterData.csv")
+encounters[1:4,] # First 4 rows of data
+
+
+## ---- eval=TRUE, echo=FALSE----------------------------------------------------
+traps <- read.csv("dat/trapData.csv", row.names=1)
+traps[1:4,] # First 4 rows of data
+
+
+## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
+nocapTraps <- setdiff(rownames(traps), encounters$trapID)
+nocapTraps
+levels(encounters$trapID) <- c(levels(encounters$trapID), nocapTraps)
+levels(encounters$trapID) # All trapIDs should be here now
+
+y3D <- table(encounters$animalID, encounters$trapID,
+             encounters$occasion)
+
+
+## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
+y3D[1:4,1:10,1] ## Data on first 4 ind at first 10 trap on k=1
+
+all(rownames(traps)==colnames(y3D))  ## Not good
+y3D <- y3D[,rownames(traps),]        ## Re-order
+all(rownames(traps)==colnames(y3D))  ## Good
+
+
+## ---- eval=TRUE, echo=FALSE----------------------------------------------------
+cat("
+model {
+p0 ~ dunif(0, 1) # baseline encounter probability
+sigma ~ dunif(0, 2) # scale parameter of encounter function
+psi ~ dunif(0, 1) # DA parameter: E(N) = M*psi
+
+for(i in 1:M) {
+z[i] ~ dbern(psi) # Is individual real?
+s[i,1] ~ dunif(xlim[1], xlim[2]) # x-coordinate of activity center
+s[i,2] ~ dunif(ylim[1], ylim[2]) # y-coordinate
+
+for(j in 1:J) {
+# dist between activity center and trap
+d[i,j] <- sqrt((s[i,1] - x[j,1])^2 + (s[i,2] - x[j,2])^2)
+p[i,j] <- p0*exp(-d[i,j]^2/(2*sigma^2)) # capture prob at trap j
+
+for(k in 1:K) {
+y[i,j,k] ~ dbern(p[i,j]*z[i]) # model for data
+}
+}
+}
+N <- sum(z) # realized abundance
+EN <- M*psi # expected abundance
+A <- (xlim[2]-xlim[1])*(ylim[2]-ylim[1]) # area of state-space
+D <- N/A # realized density
+ED <- EN/A # expected density
+}
+",file="code/SECR0.txt")
+
+
+## ---- eval=FALSE, echo=TRUE----------------------------------------------------
+#> cat("
+#> model {
+#> p0 ~ dunif(0, 1) # baseline encounter probability
+#> sigma ~ dunif(0, 2) # scale parameter of encounter function
+#> psi ~ dunif(0, 1) # DA parameter: E(N) = M*psi
+#> 
+#> for(i in 1:M) {
+#> z[i] ~ dbern(psi) # Is individual real?
+#> s[i,1] ~ dunif(xlim[1], xlim[2]) # x-coordinate of activity center
+#> s[i,2] ~ dunif(ylim[1], ylim[2]) # y-coordinate
+#> 
+#> for(j in 1:J) {
+#> # dist between activity center and trap
+#> d[i,j] <- sqrt((s[i,1] - x[j,1])^2 + (s[i,2] - x[j,2])^2)
+#> p[i,j] <- p0*exp(-d[i,j]^2/(2*sigma^2)) # capture prob at trap j
+#> 
+#> ...
+#> 
+#> ",file="code/SECR0.txt")
+
+
+## ---- eval=FALSE, echo=TRUE----------------------------------------------------
+#> cat("
+#> ...
+#> 
+#> for(k in 1:K) {
+#> y[i,j,k] ~ dbern(p[i,j]*z[i]) # model for data
+#> }
+#> }
+#> }
+#> 
+#> N <- sum(z) # realized abundance
+#> EN <- M*psi # expected abundance
+#> A <- (xlim[2]-xlim[1])*(ylim[2]-ylim[1]) # area of state-space
+#> D <- N/A # realized density
+#> ED <- EN/A # expected density
+#> }
+#> ",file="code/SECR0.txt")
+
+
+## ------------------------------------------------------------------------------
+M <- 50 # number of all individuals (encountered and DA)
+J <- dim(y3D)[2] # number of traps
+K <- dim(y3D)[3] # number of occasions
+n0 <- nrow(y3D) # number of encounter histories, i.e. encountered individuals
+
+
+## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
+# Fill up an array with zeros
+yz <- array(0, c(M, J, K))
+
+# Store the real data into the first nind slots
+yz[1:n0,,] <- y3D
+
+
+## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
+set.seed(2020)
+jd <- list(y=yz, J=J, K=K, M=M, x=traps, xlim=c(0,1), ylim=c(0,1))
+
+
+## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
+jp <- c("N", "p0", "sigma")
+
+
+## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
+ji <- function() list(z=rep(1,M), p0=runif(1), sigma=runif(1))
+
+
+## ---- eval=TRUE, echo=TRUE-----------------------------------------------------
+# Package rjags
+library(rjags)
+jm <- jags.model("code/SECR0.txt", jd, ji, n.chains=1, n.adapt=1000)
+jc <- coda.samples(jm, jp, 1000)
+
+
+## ---- eval=FALSE, echo=FALSE---------------------------------------------------
+#> summary(jc)
+
+
+## ----  out.width = '70%', fig.align = 'center', echo = FALSE-------------------
+knitr::include_graphics('img/summary_SECR0.png')
+
+
+## ---- eval=TRUE, echo=FALSE----------------------------------------------------
+plot(jc)
+
+
+## ---- eval=FALSE, echo=FALSE---------------------------------------------------
 #> knitr::purl('BayesianCR_LGuery.Rmd')
 
